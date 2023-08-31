@@ -1,0 +1,10 @@
+tracer.property: "I AM DeEV"
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: "{cipher}AQCMK242qxxgh0WudNYHG83qD5p3NhL1srBuL0LUTv6iTku9sjvmkCCj3VoI95SGU3YzFLHYeuYnol+Jd8JhM3EJA2pwFtNVGq+yybQzgDd7o2LaHd4rpiMveFprnmCfzb44bLFPmSWnby3FkQU6ROxopWCeQ3WLyKuM3rT/HdhpRb4hlzhyqOnDzurJ7DB0pnSM28S/Gn7jw0icohzYAsucZalxi+tbJTG0DP0R+882GTuguWoIqiabzOajUMJ50tz+lcmjpDGsB9CnD+bc4c2Ed98AqaRfSuXLJyWbXkS1j/n0AoXdiWLrFORn3H+v6HWMTosXPbqLH14BGrk9X9rZKsFnPB3Tz8vLtbTjUBR7LlII9vcpuRofBNf+0TVhPlM="
+    password: "{cipher}AQCMK242qxxgh0WudNYHG83qD5p3NhL1srBuL0LUTv6iTku9sjvmkCCj3VoI95SGU3YzFLHYeuYnol+Jd8JhM3EJA2pwFtNVGq+yybQzgDd7o2LaHd4rpiMveFprnmCfzb44bLFPmSWnby3FkQU6ROxopWCeQ3WLyKuM3rT/HdhpRb4hlzhyqOnDzurJ7DB0pnSM28S/Gn7jw0icohzYAsucZalxi+tbJTG0DP0R+882GTuguWoIqiabzOajUMJ50tz+lcmjpDGsB9CnD+bc4c2Ed98AqaRfSuXLJyWbXkS1j/n0AoXdiWLrFORn3H+v6HWMTosXPbqLH14BGrk9X9rZKsFnPB3Tz8vLtbTjUBR7LlII9vcpuRofBNf+0TVhPlM="
+    url: jdbc:postgresql://localhost:5432/licensing-service
+  jpa:
+    hibernate:
+      ddl-auto: create
