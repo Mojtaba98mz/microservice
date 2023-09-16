@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: account
+  config:
+    import: optional:configserver:http://localhost:8888
+  profiles:
+    active: dev
+server:
+  port: 8081
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
