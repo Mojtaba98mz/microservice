@@ -5,6 +5,14 @@ spring:
     active: dev
   config:
     import: optional:configserver:http://localhost:8888
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/realms/bank/protocol/openid-connect/certs
+#          both is correct
+#          jwk-set-uri: http://localhost:8080/realms/bank/protocol/openid-connect/certs
+#          issuer-uri: http://localhost:8080/realms/bank
 server:
   port: 8083
 management:
