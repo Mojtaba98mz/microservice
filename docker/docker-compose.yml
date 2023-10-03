@@ -1,0 +1,76 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+
+services:
+  servicediscovery:
+    image: banks/service-discovery
+    networks:
+      - banks
+    ports:
+      - 8761:8761
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+
+  configserver:
+    image: banks/config-server
+    networks:
+      - banks
+    ports:
+      - 8888:8888
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+
+  gateway:
+    image: banks/gateway
+    networks:
+      - banks
+    ports:
+      - 8072:8072
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://configserver:8888/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://servicediscovery:8761/eureka/
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER-URI: http://keycloak:8080/realms/bank
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_CLIENT-ID: gateway
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_CLIENT-SECRET: g9ahiqcNkw2usRRynUOaZE4ECNv2jrI2
+    depends_on:
+      - configserver
+      - servicediscovery
+  
+  loan:
+    image: banks/loan
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://configserver:8888/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://servicediscovery:8761/eureka/
+      SPRING_PROFILES_ACTIVE: dev
+      SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI: http://keycloak:8080/realms/bank/protocol/openid-connect/certs
+    ports:
+      - 8083:8083
+    networks:
+      - banks
+    depends_on:
+      - configserver
+      - servicediscovery
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    command: ['start-dev --import-realm']
+    volumes:
+      - ./realm-config:/opt/keycloak/data/import
+    environment:
+      KC_DB: dev-file
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_FEATURES: scripts
+      KC_HTTP_PORT: 8080
+      KC_HTTPS_PORT: 8443
+    # If you want to expose these ports outside your dev PC,
+    # remove the "127.0.0.1:" prefix
+    ports:
+      - 8080:8080
+      - 8443:8443
+    networks:
+      - banks
+
+networks:
+  banks:
+    driver: bridge
