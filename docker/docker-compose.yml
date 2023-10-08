@@ -1,59 +1,29 @@
 # This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+version: "3.5"
 
 services:
-  servicediscovery:
-    image: banks/service-discovery
-    networks:
-      - banks
-    ports:
-      - 8761:8761
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
 
   configserver:
     image: banks/config-server
-    networks:
-      - banks
     ports:
       - 8888:8888
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
+    networks:
+      - banks
 
-  gateway:
-    image: banks/gateway
-    networks:
-      - banks
+  servicediscovery:
+    image: banks/service-discovery
     ports:
-      - 8072:8072
-    environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://configserver:8888/
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://servicediscovery:8761/eureka/
-      SPRING_PROFILES_ACTIVE: dev
-      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER-URI: http://keycloak:8080/realms/bank
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_CLIENT-ID: gateway
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_CLIENT-SECRET: g9ahiqcNkw2usRRynUOaZE4ECNv2jrI2
-    depends_on:
-      - configserver
-      - servicediscovery
-  
-  loan:
-    image: banks/loan
-    environment:
-      SPRING_CONFIG_IMPORT: optional:configserver:http://configserver:8888/
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://servicediscovery:8761/eureka/
-      SPRING_PROFILES_ACTIVE: dev
-      SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI: http://keycloak:8080/realms/bank/protocol/openid-connect/certs
-    ports:
-      - 8083:8083
+      - 8761:8761
     networks:
       - banks
     depends_on:
       - configserver
-      - servicediscovery
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
 
   keycloak:
     image: quay.io/keycloak/keycloak:22.0.1
-    command: ['start-dev --import-realm']
+    command: [ 'start-dev --import-realm' ]
     volumes:
       - ./realm-config:/opt/keycloak/data/import
     environment:
@@ -68,6 +38,51 @@ services:
       - 8443:8443
     networks:
       - banks
+
+  gateway:
+    image: banks/gateway
+    networks:
+      - banks
+    restart: on-failure
+    ports:
+      - 8072:8072
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://configserver:8888/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://servicediscovery:8761/eureka/
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER-URI: http://keycloak:8080/realms/bank
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN-URI: http://keycloak:8080/realms/bank/protocol/openid-connect/token
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION-URI: http://keycloak:8080/realms/bank/protocol/openid-connect/auth
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER-INFO-URI: http://keycloak:8080/realms/bank/protocol/openid-connect/userinfo
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER-NAME-ATTRIBUTE: preferred_username
+
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_PROVIDER: keycloak
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_SCOPE: openid
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_CLIENT-ID: gateway
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_CLIENT-SECRET: g9ahiqcNkw2usRRynUOaZE4ECNv2jrI2
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_AUTHORIZATION-GRANT-TYPE: authorization_code
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_BANK-GATEWAY_REDIRECT-URI: "{baseUrl}/login/oauth2/code/keycloak"
+    depends_on:
+      - configserver
+      - servicediscovery
+      - keycloak
+  
+  loan:
+    image: banks/loan
+    ports:
+      - 8083:8083
+    networks:
+      - banks
+    depends_on:
+      - configserver
+      - servicediscovery
+      - keycloak
+    restart: on-failure
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CONFIG_IMPORT: optional:configserver:http://configserver:8888/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://servicediscovery:8761/eureka/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI: http://keycloak:8080/realms/bank/protocol/openid-connect/certs
 
 networks:
   banks:
